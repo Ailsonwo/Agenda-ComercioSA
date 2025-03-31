@@ -26,7 +26,7 @@ public class Cliente implements Serializable {
     @JsonFormat(pattern="yyyy-MM-dd", timezone = "America/Sao_Paulo")
     @Column(name = "data_nascimento", nullable = false )
     @Past
-    private LocalDate dataNascimento;
+    private LocalDate data_nascimento;
 
     @Column(length = 255)
     private String endereco;
@@ -47,12 +47,12 @@ public class Cliente implements Serializable {
         this.cpf = cpf;
     }
 
-    public LocalDate getDataNascimento() {
-        return dataNascimento;
+    public LocalDate getData_nascimento() {
+        return data_nascimento;
     }
 
     public void setData_nascimento(LocalDate dataNascimento) {
-        this.dataNascimento = dataNascimento;
+        this.data_nascimento = dataNascimento;
     }
 
     public String getEndereco() {

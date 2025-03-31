@@ -2,6 +2,7 @@ package br.com.comerciosa.agenda.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 import java.io.Serializable;
 
@@ -17,9 +18,9 @@ public class Contato implements Serializable {
     @JoinColumn(name = "cliente_cpf", referencedColumnName = "cpf")
     private Cliente cliente;
 
-    @Column(length = 50, nullable = false )
-    @NotBlank(message = "Tipo do contato é obrigatório.")
-    private String tipo;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 50, nullable = false)
+    private TipoContato tipo;
 
     @Column(length = 100, nullable = false )
     @NotBlank(message = "Valor do contato é obrigatório.")
@@ -27,6 +28,9 @@ public class Contato implements Serializable {
 
     @Column
     private String observacao;
+
+
+
 
     public Integer getId() {
         return id;
@@ -44,11 +48,11 @@ public class Contato implements Serializable {
         this.cliente = cliente;
     }
 
-    public String getTipo() {
+    public TipoContato getTipo() {
         return tipo;
     }
 
-    public void setTipo(String tipo) {
+    public void setTipo(TipoContato tipo) {
         this.tipo = tipo;
     }
 
@@ -67,4 +71,9 @@ public class Contato implements Serializable {
     public void setObservacao(String observacao) {
         this.observacao = observacao;
     }
+
+
+
+
 }
+

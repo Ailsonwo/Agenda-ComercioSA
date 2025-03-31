@@ -1,9 +1,12 @@
 package br.com.comerciosa.agenda.controller;
 
+import br.com.comerciosa.agenda.dto.response.ApiResponseDTO;
 import br.com.comerciosa.agenda.exception.RegistroNaoEncontradoException;
 import br.com.comerciosa.agenda.model.Cliente;
 import br.com.comerciosa.agenda.exception.CpfDuplicadoException;
+import br.com.comerciosa.agenda.model.Contato;
 import br.com.comerciosa.agenda.repository.ClienteRepository;
+import br.com.comerciosa.agenda.repository.ContatoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -19,62 +22,70 @@ public class ClienteController {
 
     @Autowired
     private ClienteRepository clienteRepository;
+    @Autowired
+    private ContatoRepository contatoRepository;
 
     @PostMapping(value = "/", produces = "application/json")
-    private ResponseEntity<Cliente> cadastrar(@RequestBody Cliente cliente){
-        try {
-            Cliente cl = clienteRepository.save(cliente);
-            return new ResponseEntity<Cliente>(cl, HttpStatus.CREATED);
-        }catch(DataIntegrityViolationException e) {
+    private ResponseEntity<ApiResponseDTO<Cliente>> cadastrar(@RequestBody Cliente cliente){
+        Optional<Cliente> optCliente = clienteRepository.findByCpf(cliente.getCpf());
+        if(optCliente.isPresent()){
             throw new CpfDuplicadoException(cliente.getCpf());
         }
+        Cliente cl = clienteRepository.save(cliente);
+        return ResponseEntity.ok(ApiResponseDTO.success(cl));
     }
 
     @PutMapping(value = "/", produces = "application/json")
-    private ResponseEntity<Cliente> atualizar(@RequestBody Cliente cliente){
+    private ResponseEntity<ApiResponseDTO<Cliente>> atualizar(@RequestBody Cliente cliente){
+        Optional<Cliente> optCliente = clienteRepository.findByCpf(cliente.getCpf());
+
+        if(optCliente.isEmpty()){
+            throw new RegistroNaoEncontradoException();
+        }
+
         Cliente cl = clienteRepository.save(cliente);
-        return new ResponseEntity<Cliente>(cl, HttpStatus.CREATED);
+        return ResponseEntity.ok(ApiResponseDTO.success(cl));
     }
 
     @DeleteMapping(value = "/", produces = "application/json")
-    private ResponseEntity<String> delete(@RequestParam String cpf){
+    private ResponseEntity<ApiResponseDTO<String>> delete(@RequestParam String cpf){
         Optional<Cliente> cl = clienteRepository.findByCpf(cpf);
+
         if(cl.isEmpty()){
             throw new RegistroNaoEncontradoException();
         }
 
+        List<Contato> listContato = contatoRepository.findByClienteCpf(cpf);
+        listContato.forEach(contato -> {
+            contatoRepository.delete(contato);
+        });
+
         clienteRepository.delete(cl.get());
-        return new ResponseEntity<String>("Cliente de CPF " + cpf +" deletado com sucesso", HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponseDTO.success("Cliente de CPF " + cpf +" deletado com sucesso"));
     }
 
     @GetMapping(value = "/", produces = "application/json")
-    private ResponseEntity<List<Cliente>> getClientes(){
+    private ResponseEntity<ApiResponseDTO<List<Cliente>>> getClientes(){
         List<Cliente> clienteList = clienteRepository.findAll();
 
-        if(clienteList.isEmpty()){
-            throw new RegistroNaoEncontradoException();
-        }
-        return new ResponseEntity<List<Cliente>>(clienteList, HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponseDTO.success(clienteList));
     }
 
     @GetMapping(value = "/buscaNome/", produces = "application/json")
-    private ResponseEntity<List<Cliente>> getClientes(@RequestParam(value = "nome")  String nome){
+    private ResponseEntity<ApiResponseDTO<List<Cliente>>> getClientes(@RequestParam(value = "nome")  String nome){
         List<Cliente> clienteList = clienteRepository.findByNomeContaining(nome);
-
-        if(clienteList.isEmpty()){
-            throw new RegistroNaoEncontradoException();
-        }
-        return new ResponseEntity<List<Cliente>>(clienteList, HttpStatus.OK);
+        
+        return ResponseEntity.ok(ApiResponseDTO.success(clienteList));
     }
 
     @GetMapping(value = "/buscaCpf/", produces = "application/json")
-    private ResponseEntity<Cliente> getClienteByCpf(@RequestParam(value = "cpf")  String cpf){
+    private ResponseEntity<ApiResponseDTO<Cliente>> getClienteByCpf(@RequestParam(value = "cpf")  String cpf){
         Optional<Cliente> cl = clienteRepository.findByCpf(cpf);
 
         if(cl.isEmpty()){
             throw new RegistroNaoEncontradoException();
         }
 
-        return new ResponseEntity<Cliente>(cl.get(), HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponseDTO.success(cl.get()));
     }
 }
